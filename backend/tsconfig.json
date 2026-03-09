@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "CommonJS",
+    // Agora consideramos todo o diretório como fonte, não só "src"
+    "rootDir": ".",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "moduleResolution": "Node",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/@types"
+    ],
+    "skipLibCheck": true
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "src/controllers/financial*.ts",
+    "src/controllers/user-financial*.ts",
+    "src/controllers/user-preference*.ts",
+    "src/controllers/default.controller.ts",
+    "src/controllers/financial-account-movement-report.controller.ts",
+    "src/routes/financial*.ts",
+    "src/routes/user-account-access*.ts",
+    "src/routes/preferences*.ts",
+    "src/services/financial*.ts",
+    "src/services/user-financial*.ts",
+    "src/services/user-preference*.ts",
+    "src/services/default.service.ts",
+    "src/services/pdf-generator.service.ts",
+    "src/services/excel-generator.service.ts",
+    "src/validators/financial*.ts",
+    "src/validators/user-account-access.validator.ts",
+    "src/validators/user-preference.validator.ts",
+    "src/middlewares/financial-access.middleware.ts",
+    "src/middlewares/feature-permission.middleware.ts"
+  ],
+  "files": [
+    "src/@types/express/index.d.ts"
+  ]
+}

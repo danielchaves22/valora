@@ -1,0 +1,107 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+enum Role {
+  ADMIN
+  SUPERUSER
+  USER
+}
+
+model User {
+  id                 Int                @id @default(autoincrement())
+  email              String             @unique
+  password           String
+  name               String
+  role               Role               @default(USER)
+  mustChangePassword Boolean            @default(true)
+  companies          UserCompany[]
+  identities         UserIdentity[]
+  valuationsCreated  ValuationProcess[] @relation("ValuationCreatedBy")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}
+
+model UserIdentity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  provider  String
+  subject   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@index([userId])
+}
+
+model Company {
+  id         Int                @id @default(autoincrement())
+  name       String
+  address    String?
+  code       Int                @unique
+  users      UserCompany[]
+  groups     CompanyGroup[]
+  valuations ValuationProcess[]
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+}
+
+model CompanyGroup {
+  id        Int       @id @default(autoincrement())
+  name      String
+  companies Company[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model UserCompany {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  companyId Int
+  isDefault Boolean @default(false)
+  role      Role    @default(USER)
+  user      User    @relation(fields: [userId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
+
+  @@unique([userId, companyId])
+}
+
+model ValuationProcess {
+  id                        Int      @id @default(autoincrement())
+  name                      String
+  companyId                 Int
+  createdBy                 Int
+  revenueCurrent            Decimal  @db.Decimal(18, 2)
+  revenueGrowthRate         Decimal  @db.Decimal(9, 6)
+  ebitdaMargin              Decimal  @db.Decimal(9, 6)
+  taxRate                   Decimal  @db.Decimal(9, 6)
+  capexRate                 Decimal  @db.Decimal(9, 6)
+  workingCapitalDeltaRate   Decimal  @db.Decimal(9, 6)
+  grossDebt                 Decimal  @db.Decimal(18, 2)
+  cash                      Decimal  @db.Decimal(18, 2)
+  wacc                      Decimal  @db.Decimal(9, 6)
+  perpetualGrowthRate       Decimal  @db.Decimal(9, 6)
+  ebitdaMultipleConservative Decimal @db.Decimal(9, 4)
+  ebitdaMultipleBase         Decimal @db.Decimal(9, 4)
+  ebitdaMultipleAggressive   Decimal @db.Decimal(9, 4)
+  tam                       Decimal  @db.Decimal(18, 2)
+  marketShareFuture         Decimal  @db.Decimal(9, 6)
+  startupFutureMargin       Decimal  @db.Decimal(9, 6)
+  vcDiscountRate            Decimal  @db.Decimal(9, 6)
+  assetsTotal               Decimal  @db.Decimal(18, 2)
+  liabilitiesTotal          Decimal  @db.Decimal(18, 2)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  creator   User    @relation("ValuationCreatedBy", fields: [createdBy], references: [id])
+
+  @@index([companyId])
+  @@index([createdBy])
+}

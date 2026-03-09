@@ -1,0 +1,104 @@
+# docker-compose.yml - REDIS DESABILITADO
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+
+  # === Redis - TEMPORARIAMENTE DESABILITADO ===
+  # ✅ Para reativar: descomente este bloco e adicione dependência no backend
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: valora-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - ./backend/redis/redis.conf:/etc/redis/redis.conf:ro
+  #   command: redis-server /etc/redis/redis.conf
+  #   networks:
+  #     - monitoring
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+
+services: 
+  # === Backend (APENAS DEPENDE DO BANCO AGORA) ===
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: valora-backend
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./backend/.env.docker
+      # ✅ REDIS DEPENDENCY REMOVIDA - usando memory store
+      # redis:
+      #   condition: service_healthy
+    networks:
+      - monitoring
+    # ✅ CRÍTICO: Health check do backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # === Frontend ===
+  frontend:
+    build:
+      context: ./apps/valora
+      dockerfile: Dockerfile
+    container_name: valora-frontend
+    ports:
+      - '3001:3000'
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # === Prometheus ===
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: valora-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./backend/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      - backend
+    networks:
+      - monitoring
+
+  # === Grafana ===
+  grafana:
+    image: grafana/grafana:latest
+    container_name: valora-grafana
+    ports:
+      - '3030:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+# ============================================
+# PARA REATIVAR REDIS NO FUTURO:
+# 1. Descomente o serviço redis acima
+# 2. Adicione redis dependency no backend
+# 3. Configure REDIS_ENABLED=true no .env.docker
+# ============================================
