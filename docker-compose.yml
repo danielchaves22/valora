@@ -51,7 +51,7 @@ services:
   # === Frontend ===
   frontend:
     build:
-      context: ./apps/valora
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: valora-frontend
     ports:

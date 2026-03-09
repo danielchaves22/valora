@@ -1,6 +1,7 @@
 // frontend/pages/_app.tsx - COM THEME PROVIDER
 import '@/styles/globals.css'
 import { AppProps } from 'next/app'
+import Head from 'next/head'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { ThemeProvider } from '@/contexts/ThemeContext' // ✅ NOVO IMPORT
 import { ToastProvider } from '@/components/ui/ToastContext'
@@ -21,7 +22,12 @@ function AppContent({ Component, pageProps }: AppProps) {
 
 export default function App(props: AppProps) {
   return (
-    <ThemeProvider> {/* ✅ WRAPPER PRINCIPAL PARA TEMAS */}
+    <ThemeProvider>
+      {/* Wrapper principal para temas */}
+      <Head>
+        <title>Valora</title>
+        <link rel="icon" href="/favicon.png" />
+      </Head>
       <AuthProvider>
         <ToastProvider>
           <PageTransition />

@@ -63,8 +63,8 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
             <Image
               src="/assets/images/logo_principal.png"
               alt="VALORA"
-              width={2000}
-              height={1000}
+              width={458}
+              height={141}
               priority
               className="h-10 w-auto"
             />

@@ -44,10 +44,10 @@ export default function LoginPage() {
             <Image
               src="/assets/images/logo.png"
               alt="VALORA"
-              width={2000}
-              height={1000}
+              width={458}
+              height={141}
               priority
-              className="w-auto"
+              className="h-12 w-auto"
             />
           </div>
         </div>
