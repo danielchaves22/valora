@@ -6,9 +6,11 @@ import { Card } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import Image from 'next/image'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { colorMode } = useTheme();
   const router = useRouter();
   const { redirect } = router.query as { redirect?: string };
 
@@ -36,13 +38,15 @@ export default function LoginPage() {
     }
   }
 
+  const logoSrc = colorMode === 'dark' ? '/assets/images/logo_principal_dark.png' : '/assets/images/logo.png';
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md bg-elevated border-soft shadow-lg">
         <div className="flex justify-center mb-6">
           <div className="text-center">
             <Image
-              src="/assets/images/logo.png"
+              src={logoSrc}
               alt="VALORA"
               width={458}
               height={141}

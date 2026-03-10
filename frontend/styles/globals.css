@@ -44,6 +44,23 @@
   --color-border: #d6dde3;
 }
 
+/* Paleta escura (base verde Valora) */
+.theme-dark {
+  --color-bg: #0f2b25;
+  --color-bg-secondary: #14352e;
+  --color-bg-tertiary: #1a4138;
+  --color-text: #e7f3ef;
+  --color-text-secondary: #b9c9c3;
+  --color-border: #235045;
+
+  --color-primary: #4fb59a;
+  --color-primary-hover: #45a88f;
+  --color-primary-light: #6ad0b5;
+  --color-primary-dark: #2a7a67;
+  --color-primary-gradient: linear-gradient(135deg, #4fb59a 0%, #2a7a67 100%);
+  --color-primary-shadow: 0 10px 25px rgba(79, 181, 154, 0.35);
+}
+
 /* ✅ CLASSES UTILITÁRIAS EXPANDIDAS PARA CORES DINÂMICAS */
 @layer utilities {
   /* Cores básicas */

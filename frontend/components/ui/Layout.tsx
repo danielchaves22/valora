@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from './Button';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { logout, userName, companyName, userRole } = useAuth();
+  const { colorMode } = useTheme();
   const router = useRouter();
 
   const isHome = router.pathname === '/';
@@ -20,7 +22,11 @@ export function Layout({ children }: LayoutProps) {
       {/* Navbar */}
       <header className="bg-white shadow-md py-4 px-6 flex justify-between items-center sticky top-0 z-10">
         <div className="flex items-center space-x-4">
-          <img src="/assets/images/logo_principal.png" alt="Valora" className="h-6 w-auto" />
+          <img
+            src={colorMode === 'dark' ? '/assets/images/logo_principal_dark.png' : '/assets/images/logo_principal.png'}
+            alt="Valora"
+            className="h-6 w-auto"
+          />
           {!isHome && (
             <Link href="/">
               <Button variant="outline" className="text-sm px-3 py-1">

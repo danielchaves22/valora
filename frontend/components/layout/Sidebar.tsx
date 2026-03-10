@@ -13,7 +13,6 @@ interface SidebarProps {
 type SubMenuItem = {
   label: string;
   href?: string;
-  isHeader?: boolean;
   hideWhenExpanded?: boolean;
 };
 
@@ -58,16 +57,17 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
       label: 'Valuation',
       visible: true,
       subItems: [
-        { label: 'Novo Valuation', href: '/valuations/new', isHeader: true, hideWhenExpanded: true },
+        { label: 'Valuation', hideWhenExpanded: true },
+        { label: 'Novo Valuation', href: '/valuations/new' },
         { label: 'Processos', href: '/valuations' }
       ]
     },
     {
       icon: (cls: string) => <Users size={20} className={cls} />,
-      label: 'Admin',
+      label: 'Usuarios',
       visible: canSeeUsers || canSeeCompanies,
       subItems: [
-        { label: 'Usuários', href: '/admin/users', isHeader: true, hideWhenExpanded: true }
+        { label: 'Usuarios', href: '/admin/users', hideWhenExpanded: true }
       ]
     },
     {
@@ -75,7 +75,7 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
       label: 'Empresas',
       visible: canSeeCompanies,
       subItems: [
-        { label: 'Empresas', href: '/admin/companies', isHeader: true, hideWhenExpanded: true }
+        { label: 'Empresas', href: '/admin/companies', hideWhenExpanded: true }
       ]
     },
   ].filter(i => i.visible);
@@ -84,15 +84,15 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
   const [submenuPosition, setSubmenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   const getFirstClickableSubItem = (item: MenuItem) => item.subItems.find(s => !!s.href);
-  const hasMultipleClickableSubItems = (item: MenuItem) =>
-    item.subItems.filter(s => !!s.href && !s.hideWhenExpanded).length > 1;
+  const hasVisibleExpandedSubItems = (item: MenuItem) =>
+    item.subItems.some(s => !s.hideWhenExpanded);
 
   const handleMouseEnter = (item: MenuItem, e: React.MouseEvent) => {
     try {
       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setSubmenuPosition({ top: rect.top + window.scrollY, left: rect.right + 8 });
+      setSubmenuPosition({ top: rect.top + window.scrollY, left: rect.right + 2 });
     } catch {}
-    if (collapsed || hasMultipleClickableSubItems(item)) {
+    if (collapsed || hasVisibleExpandedSubItems(item)) {
       setActiveMenu(item);
     } else {
       setActiveMenu(null);
@@ -119,7 +119,12 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
           {menuItems.map((item, idx) => {
             const first = getFirstClickableSubItem(item);
             const href = first?.href || '#';
-            const isActive = item.subItems.some(sub => sub.href && router.pathname === sub.href);
+            const isActive = item.subItems.some(sub => {
+              if (!sub.href) return false;
+              if (router.pathname === sub.href) return true;
+              if (sub.href !== '/' && router.pathname.startsWith(sub.href + '/')) return true;
+              return false;
+            });
 
             if (collapsed) {
               return (
@@ -151,7 +156,7 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
                     {item.icon(isActive ? 'text-accent' : 'text-muted')}
                     <span>{item.label}</span>
                   </div>
-                  {item.subItems.length > 1 && <ChevronRight size={16} className="text-muted" />}
+                  {hasVisibleExpandedSubItems(item) && <ChevronRight size={16} className="text-muted" />}
                 </Link>
               </li>
             );
@@ -168,13 +173,15 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
         >
           <div className="py-1">
             {activeMenu.subItems
-              .filter(sub => !sub.hideWhenExpanded || collapsed)
-              .map((sub, i) =>
-                sub.isHeader ? (
+              .filter(sub => collapsed || !sub.hideWhenExpanded)
+              .map((sub, i) => {
+                const isSingleItem = activeMenu.subItems.length === 1;
+                const renderAsCategory = !sub.href || isSingleItem;
+                return renderAsCategory ? (
                   <div
                     key={i}
-                    className="px-4 py-2 bg-elevated text-muted whitespace-nowrap hover:text-accent transition-colors"
-                    onClick={() => sub.href && router.push(sub.href!)}
+                    className="px-4 py-2 text-muted whitespace-nowrap"
+                    onClick={() => sub.href && router.push(sub.href)}
                     style={{ cursor: sub.href ? ('pointer' as React.CSSProperties['cursor']) : 'default' }}
                   >
                     {sub.label}
@@ -187,8 +194,8 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
                   >
                     {sub.label}
                   </Link>
-                )
-              )}
+                );
+              })}
           </div>
         </div>
       )}

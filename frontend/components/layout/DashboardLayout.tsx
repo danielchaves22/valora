@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Sidebar } from './Sidebar';
 import { ThemeSelector } from '@/components/ui/ThemeSelector';
+import { useTheme } from '@/contexts/ThemeContext';
 import { User, Repeat } from 'lucide-react';
 import { CompanySwitcherModal } from '@/components/ui/CompanySwitcherModal';
 
@@ -16,6 +17,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayoutProps) {
   const { logout, userName, companyName, userRole, user } = useAuth();
+  const { colorMode } = useTheme();
   const router = useRouter();
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -53,6 +55,8 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
   const toggleUserMenu = () => setUserMenuOpen(!userMenuOpen);
   const handleMenuAction = (action: () => void) => { setUserMenuOpen(false); action(); };
 
+  const logoSrc = colorMode === 'dark' ? '/assets/images/logo_principal_dark.png' : '/assets/images/logo_principal.png';
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Top Navigation */}
@@ -61,7 +65,7 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center hover:opacity-90">
             <Image
-              src="/assets/images/logo_principal.png"
+              src={logoSrc}
               alt="VALORA"
               width={458}
               height={141}

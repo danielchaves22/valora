@@ -227,19 +227,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--color-primary-shadow', theme.colors.primaryShadow);
   };
 
-  // ✅ CARREGAR TEMA SALVO E APLICAR
-  useEffect(() => { try { localStorage.removeItem('selected-theme'); localStorage.removeItem('color-mode'); } catch {} }, []);
+  // ✅ CARREGAR MODO DE COR SALVO
+  useEffect(() => {
+    try {
+      const savedMode = localStorage.getItem('color-mode') as 'dark' | 'light' | null;
+      if (savedMode === 'dark' || savedMode === 'light') {
+        setColorMode(savedMode);
+      }
+    } catch {}
+  }, []);
 
   // ✅ APLICAR TEMA QUANDO MUDAR
   useEffect(() => { /* fixed theme: no dynamic apply */ }, [currentTheme]);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (colorMode === 'light') {
-      root.classList.add('theme-light');
-    } else {
+    if (colorMode === 'dark') {
+      root.classList.add('theme-dark');
       root.classList.remove('theme-light');
+    } else {
+      root.classList.add('theme-light');
+      root.classList.remove('theme-dark');
     }
+    root.style.colorScheme = colorMode;
+    try { localStorage.setItem('color-mode', colorMode); } catch {}
   }, [colorMode]);
 
   // ✅ FUNÇÃO PARA MUDAR TEMA
@@ -248,7 +259,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return;
   };
 
-  const changeColorMode = (_mode: 'dark' | 'light') => { setColorMode('light'); };
+  const changeColorMode = (mode: 'dark' | 'light') => { setColorMode(mode); };
 
   // ✅ AGRUPAR TEMAS POR CATEGORIA
   const themesByCategory = AVAILABLE_THEMES.reduce((acc, theme) => {
