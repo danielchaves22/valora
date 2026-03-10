@@ -234,7 +234,7 @@ export function UserForm({ mode, userId }: UserFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Nome</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Nome" />
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Nome" autoFocus={!isEdit} />
           </div>
           <div>
             <label className="block text-sm text-gray-300 mb-1">Email</label>

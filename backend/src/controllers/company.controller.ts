@@ -28,7 +28,7 @@ export const createCompany = async (req: Request, res: Response) => {
     return res.status(403).json({ error: 'Acesso negado: apenas ADMIN pode criar empresas.' });
   }
 
-  const { name, address } = req.body;
+  const { name, legalName, address } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'O campo name é obrigatório.' });
   }
@@ -36,6 +36,7 @@ export const createCompany = async (req: Request, res: Response) => {
   try {
     const company = await CompanyService.createCompany({
       name,
+      legalName,
       address
     });
 
@@ -98,13 +99,13 @@ export const updateCompany = async (req: Request, res: Response) => {
   }
 
   const id = Number(req.params.id);
-  const { name, address } = req.body;
-  if (isNaN(id) || (name === undefined && address === undefined)) {
+  const { name, legalName, address } = req.body;
+  if (isNaN(id) || (name === undefined && legalName === undefined && address === undefined)) {
     return res.status(400).json({ error: 'ID inválido ou nenhum campo para atualizar.' });
   }
 
   try {
-    const company = await CompanyService.updateCompany(id, { name, address });
+    const company = await CompanyService.updateCompany(id, { name, legalName, address });
     return res.status(200).json(company);
   } catch (error) {
     logger.error(`Erro ao atualizar empresa ${id}:`, error);

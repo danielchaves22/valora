@@ -15,6 +15,7 @@ import api from '@/lib/api'
 interface Company {
   id: number
   name: string
+  legalName?: string
   address?: string
   code: number
   createdAt: string
@@ -127,6 +128,7 @@ export default function CompaniesPage() {
                     <th className="px-4 py-3 text-center w-24">Acoes</th>
                     <th className="px-4 py-3 text-left">Codigo</th>
                     <th className="px-4 py-3 text-left">Nome</th>
+                    <th className="px-4 py-3 text-left">Razao social</th>
                     <th className="px-4 py-3 text-left">Endereco</th>
                     <th className="px-4 py-3 text-left">Criada em</th>
                   </tr>
@@ -164,6 +166,9 @@ export default function CompaniesPage() {
                           <Building2 size={16} className="text-accent" />
                           <span className="font-medium text-white">{company.name}</span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-300">
+                        {company.legalName || '-'}
                       </td>
                       <td className="px-4 py-3 text-gray-300">
                         {company.address || '-'}

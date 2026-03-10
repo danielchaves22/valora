@@ -9,48 +9,48 @@ import api from '@/lib/api';
 
 interface ValuationForm {
   name: string;
-  revenueCurrent: number;
-  revenueGrowthRate: number;
-  ebitdaMargin: number;
-  taxRate: number;
-  capexRate: number;
-  workingCapitalDeltaRate: number;
-  grossDebt: number;
-  cash: number;
-  wacc: number;
-  perpetualGrowthRate: number;
-  ebitdaMultipleConservative: number;
-  ebitdaMultipleBase: number;
-  ebitdaMultipleAggressive: number;
-  tam: number;
-  marketShareFuture: number;
-  startupFutureMargin: number;
-  vcDiscountRate: number;
-  assetsTotal: number;
-  liabilitiesTotal: number;
+  revenueCurrent: number | null;
+  revenueGrowthRate: number | null;
+  ebitdaMargin: number | null;
+  taxRate: number | null;
+  capexRate: number | null;
+  workingCapitalDeltaRate: number | null;
+  grossDebt: number | null;
+  cash: number | null;
+  wacc: number | null;
+  perpetualGrowthRate: number | null;
+  ebitdaMultipleConservative: number | null;
+  ebitdaMultipleBase: number | null;
+  ebitdaMultipleAggressive: number | null;
+  tam: number | null;
+  marketShareFuture: number | null;
+  startupFutureMargin: number | null;
+  vcDiscountRate: number | null;
+  assetsTotal: number | null;
+  liabilitiesTotal: number | null;
 }
 
 const defaultForm: ValuationForm = {
-  name: 'Valuation inicial',
-  revenueCurrent: 5000000,
-  revenueGrowthRate: 0.15,
-  ebitdaMargin: 0.25,
-  taxRate: 0.34,
-  capexRate: 0.05,
-  workingCapitalDeltaRate: 0.03,
-  grossDebt: 1000000,
-  cash: 300000,
-  wacc: 0.12,
-  perpetualGrowthRate: 0.03,
-  ebitdaMultipleConservative: 4,
-  ebitdaMultipleBase: 6,
-  ebitdaMultipleAggressive: 8,
-  tam: 100000000,
-  marketShareFuture: 0.05,
-  startupFutureMargin: 0.3,
-  vcDiscountRate: 0.35,
-  assetsTotal: 3000000,
-  liabilitiesTotal: 1500000
+  name: '',
+  revenueCurrent: null,
+  revenueGrowthRate: null,
+  ebitdaMargin: null,
+  taxRate: null,
+  capexRate: null,
+  workingCapitalDeltaRate: null,
+  grossDebt: null,
+  cash: null,
+  wacc: null,
+  perpetualGrowthRate: null,
+  ebitdaMultipleConservative: null,
+  ebitdaMultipleBase: null,
+  ebitdaMultipleAggressive: null,
+  tam: null,
+  marketShareFuture: null,
+  startupFutureMargin: null,
+  vcDiscountRate: null,
+  assetsTotal: null,
+  liabilitiesTotal: null
 };
 
 export default function NewValuationPage() {
@@ -65,8 +65,12 @@ export default function NewValuationPage() {
       setForm(prev => ({ ...prev, [field]: value }));
       return;
     }
+    if (value === '') {
+      setForm(prev => ({ ...prev, [field]: null }));
+      return;
+    }
     const parsed = Number(value);
-    setForm(prev => ({ ...prev, [field]: Number.isNaN(parsed) ? 0 : parsed }));
+    setForm(prev => ({ ...prev, [field]: Number.isNaN(parsed) ? null : parsed }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,7 +79,45 @@ export default function NewValuationPage() {
     setLoading(true);
 
     try {
-      const response = await api.post('/valuations', form);
+      const numericFields: (keyof ValuationForm)[] = [
+        'revenueCurrent',
+        'revenueGrowthRate',
+        'ebitdaMargin',
+        'taxRate',
+        'capexRate',
+        'workingCapitalDeltaRate',
+        'grossDebt',
+        'cash',
+        'wacc',
+        'perpetualGrowthRate',
+        'ebitdaMultipleConservative',
+        'ebitdaMultipleBase',
+        'ebitdaMultipleAggressive',
+        'tam',
+        'marketShareFuture',
+        'startupFutureMargin',
+        'vcDiscountRate',
+        'assetsTotal',
+        'liabilitiesTotal'
+      ];
+
+      const hasEmpty = numericFields.some((field) => form[field] === null);
+      if (!form.name.trim() || hasEmpty) {
+        setError('Preencha todos os campos obrigatorios.');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        ...form,
+        name: form.name.trim()
+      } as Record<string, any>;
+
+      numericFields.forEach((field) => {
+        payload[field] = Number(form[field]);
+      });
+
+      const response = await api.post('/valuations', payload);
       router.push(`/valuations/${response.data.id}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Erro ao criar valuation');
@@ -90,56 +132,56 @@ export default function NewValuationPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6">
           <h1 className="text-2xl font-semibold text-white mb-4">Novo valuation</h1>
-          <Input id="name" label="Nome do processo" value={form.name} onChange={updateField('name')} required />
+          <Input id="name" label="Nome do processo" value={form.name} onChange={updateField('name')} required autoFocus />
           <p className="text-sm text-muted">Taxas devem ser informadas como decimais (ex.: 0.15 = 15%).</p>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Premissas estratégicas</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input id="revenueCurrent" label="Receita Atual" type="number" step="0.01" value={form.revenueCurrent} onChange={updateField('revenueCurrent')} required />
-            <Input id="revenueGrowthRate" label="Crescimento Receita (%)" type="number" step="0.0001" value={form.revenueGrowthRate} onChange={updateField('revenueGrowthRate')} required />
-            <Input id="ebitdaMargin" label="Margem EBITDA (%)" type="number" step="0.0001" value={form.ebitdaMargin} onChange={updateField('ebitdaMargin')} required />
-            <Input id="taxRate" label="Imposto (%)" type="number" step="0.0001" value={form.taxRate} onChange={updateField('taxRate')} required />
-            <Input id="capexRate" label="CAPEX (% Receita)" type="number" step="0.0001" value={form.capexRate} onChange={updateField('capexRate')} required />
-            <Input id="workingCapitalDeltaRate" label="Δ Capital de Giro (% Receita)" type="number" step="0.0001" value={form.workingCapitalDeltaRate} onChange={updateField('workingCapitalDeltaRate')} required />
+            <Input id="revenueCurrent" label="Receita Atual" type="number" step="0.01" value={form.revenueCurrent ?? ''} onChange={updateField('revenueCurrent')} required />
+            <Input id="revenueGrowthRate" label="Crescimento Receita (%)" type="number" step="0.0001" value={form.revenueGrowthRate ?? ''} onChange={updateField('revenueGrowthRate')} required />
+            <Input id="ebitdaMargin" label="Margem EBITDA (%)" type="number" step="0.0001" value={form.ebitdaMargin ?? ''} onChange={updateField('ebitdaMargin')} required />
+            <Input id="taxRate" label="Imposto (%)" type="number" step="0.0001" value={form.taxRate ?? ''} onChange={updateField('taxRate')} required />
+            <Input id="capexRate" label="CAPEX (% Receita)" type="number" step="0.0001" value={form.capexRate ?? ''} onChange={updateField('capexRate')} required />
+            <Input id="workingCapitalDeltaRate" label="Δ Capital de Giro (% Receita)" type="number" step="0.0001" value={form.workingCapitalDeltaRate ?? ''} onChange={updateField('workingCapitalDeltaRate')} required />
           </div>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Estrutura de capital</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input id="grossDebt" label="Dívida Bruta" type="number" step="0.01" value={form.grossDebt} onChange={updateField('grossDebt')} required />
-            <Input id="cash" label="Caixa" type="number" step="0.01" value={form.cash} onChange={updateField('cash')} required />
-            <Input id="wacc" label="WACC" type="number" step="0.0001" value={form.wacc} onChange={updateField('wacc')} required />
-            <Input id="perpetualGrowthRate" label="Crescimento Perpetuidade (g)" type="number" step="0.0001" value={form.perpetualGrowthRate} onChange={updateField('perpetualGrowthRate')} required />
+            <Input id="grossDebt" label="Dívida Bruta" type="number" step="0.01" value={form.grossDebt ?? ''} onChange={updateField('grossDebt')} required />
+            <Input id="cash" label="Caixa" type="number" step="0.01" value={form.cash ?? ''} onChange={updateField('cash')} required />
+            <Input id="wacc" label="WACC" type="number" step="0.0001" value={form.wacc ?? ''} onChange={updateField('wacc')} required />
+            <Input id="perpetualGrowthRate" label="Crescimento Perpetuidade (g)" type="number" step="0.0001" value={form.perpetualGrowthRate ?? ''} onChange={updateField('perpetualGrowthRate')} required />
           </div>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Múltiplos EBITDA</h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <Input id="ebitdaMultipleConservative" label="Múltiplo Conservador" type="number" step="0.01" value={form.ebitdaMultipleConservative} onChange={updateField('ebitdaMultipleConservative')} required />
-            <Input id="ebitdaMultipleBase" label="Múltiplo Base" type="number" step="0.01" value={form.ebitdaMultipleBase} onChange={updateField('ebitdaMultipleBase')} required />
-            <Input id="ebitdaMultipleAggressive" label="Múltiplo Agressivo" type="number" step="0.01" value={form.ebitdaMultipleAggressive} onChange={updateField('ebitdaMultipleAggressive')} required />
+            <Input id="ebitdaMultipleConservative" label="Múltiplo Conservador" type="number" step="0.01" value={form.ebitdaMultipleConservative ?? ''} onChange={updateField('ebitdaMultipleConservative')} required />
+            <Input id="ebitdaMultipleBase" label="Múltiplo Base" type="number" step="0.01" value={form.ebitdaMultipleBase ?? ''} onChange={updateField('ebitdaMultipleBase')} required />
+            <Input id="ebitdaMultipleAggressive" label="Múltiplo Agressivo" type="number" step="0.01" value={form.ebitdaMultipleAggressive ?? ''} onChange={updateField('ebitdaMultipleAggressive')} required />
           </div>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Startup / TAM</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input id="tam" label="TAM" type="number" step="0.01" value={form.tam} onChange={updateField('tam')} required />
-            <Input id="marketShareFuture" label="Market Share Futuro" type="number" step="0.0001" value={form.marketShareFuture} onChange={updateField('marketShareFuture')} required />
-            <Input id="startupFutureMargin" label="Margem Futura Startup" type="number" step="0.0001" value={form.startupFutureMargin} onChange={updateField('startupFutureMargin')} required />
-            <Input id="vcDiscountRate" label="Taxa Desconto VC" type="number" step="0.0001" value={form.vcDiscountRate} onChange={updateField('vcDiscountRate')} required />
+            <Input id="tam" label="TAM" type="number" step="0.01" value={form.tam ?? ''} onChange={updateField('tam')} required />
+            <Input id="marketShareFuture" label="Market Share Futuro" type="number" step="0.0001" value={form.marketShareFuture ?? ''} onChange={updateField('marketShareFuture')} required />
+            <Input id="startupFutureMargin" label="Margem Futura Startup" type="number" step="0.0001" value={form.startupFutureMargin ?? ''} onChange={updateField('startupFutureMargin')} required />
+            <Input id="vcDiscountRate" label="Taxa Desconto VC" type="number" step="0.0001" value={form.vcDiscountRate ?? ''} onChange={updateField('vcDiscountRate')} required />
           </div>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-lg font-semibold text-white mb-4">Patrimonial</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <Input id="assetsTotal" label="Ativo Total" type="number" step="0.01" value={form.assetsTotal} onChange={updateField('assetsTotal')} required />
-            <Input id="liabilitiesTotal" label="Passivo Total" type="number" step="0.01" value={form.liabilitiesTotal} onChange={updateField('liabilitiesTotal')} required />
+            <Input id="assetsTotal" label="Ativo Total" type="number" step="0.01" value={form.assetsTotal ?? ''} onChange={updateField('assetsTotal')} required />
+            <Input id="liabilitiesTotal" label="Passivo Total" type="number" step="0.01" value={form.liabilitiesTotal ?? ''} onChange={updateField('liabilitiesTotal')} required />
           </div>
         </Card>
 

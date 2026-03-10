@@ -44,6 +44,7 @@ model UserIdentity {
 model Company {
   id         Int                @id @default(autoincrement())
   name       String
+  legalName  String?
   address    String?
   code       Int                @unique
   users      UserCompany[]

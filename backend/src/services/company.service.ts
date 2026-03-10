@@ -18,15 +18,16 @@ export default class CompanyService {
    */
   static async createCompany(data: {
     name: string;
+    legalName?: string;
     address?: string;
   }): Promise<Company> {
-    const { name, address } = data;
+    const { name, legalName, address } = data;
 
     logger.info('Creating new company', { name });
 
     const code = await this.nextCode();
     const company = await prisma.company.create({
-      data: { name, address, code }
+      data: { name, legalName, address, code }
     });
 
     logger.info('Company created successfully', {

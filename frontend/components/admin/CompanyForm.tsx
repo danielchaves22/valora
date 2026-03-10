@@ -11,6 +11,7 @@ import api from '@/lib/api'
 interface Company {
   id: number
   name: string
+  legalName?: string
   address?: string
   code: number
   createdAt: string
@@ -30,7 +31,7 @@ export function CompanyForm({ mode, companyId }: CompanyFormProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [formLoading, setFormLoading] = useState(false)
-  const [formData, setFormData] = useState({ name: '', address: '' })
+  const [formData, setFormData] = useState({ name: '', legalName: '', address: '' })
 
   useEffect(() => {
     if (isEdit && (companyId === undefined || companyId === null)) return
@@ -40,7 +41,7 @@ export function CompanyForm({ mode, companyId }: CompanyFormProps) {
       if (isEdit) {
         await fetchCompany()
       } else {
-        setFormData({ name: '', address: '' })
+        setFormData({ name: '', legalName: '', address: '' })
       }
       setLoading(false)
     }
@@ -61,7 +62,7 @@ export function CompanyForm({ mode, companyId }: CompanyFormProps) {
         setError('Empresa nao encontrada.')
         return
       }
-      setFormData({ name: found.name, address: found.address || '' })
+      setFormData({ name: found.name, legalName: found.legalName || '', address: found.address || '' })
     } catch (err: any) {
       const errorMsg = err.response?.data?.error || 'Erro ao carregar empresa'
       setError(errorMsg)
@@ -82,12 +83,14 @@ export function CompanyForm({ mode, companyId }: CompanyFormProps) {
     try {
       if (isEdit) {
         const payload: any = { name: formData.name }
+        if (formData.legalName?.trim()) payload.legalName = formData.legalName
         if (formData.address?.trim()) payload.address = formData.address
         await api.put(`/companies/${companyId}`, payload)
         addToast('Empresa atualizada com sucesso', 'success')
       } else {
         await api.post('/companies', {
           name: formData.name,
+          legalName: formData.legalName || undefined,
           address: formData.address || undefined
         })
         addToast('Empresa criada com sucesso', 'success')
@@ -145,9 +148,13 @@ export function CompanyForm({ mode, companyId }: CompanyFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm text-gray-300 mb-1">Nome da empresa</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Nome" />
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="Nome" autoFocus={!isEdit} />
           </div>
           <div>
+            <label className="block text-sm text-gray-300 mb-1">Razao social</label>
+            <Input value={formData.legalName} onChange={e => setFormData({ ...formData, legalName: e.target.value })} placeholder="Razao social" />
+          </div>
+          <div className="md:col-span-2">
             <label className="block text-sm text-gray-300 mb-1">Endereco</label>
             <Input value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Endereco" />
           </div>
