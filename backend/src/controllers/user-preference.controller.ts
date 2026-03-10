@@ -5,7 +5,14 @@ export async function getPreferences(req: Request, res: Response) {
   // @ts-ignore
   const userId = req.user.userId as number;
   const pref = await getUserPreference(userId);
-  res.json(pref || {});
+  if (!pref) {
+    return res.json({});
+  }
+  return res.json({
+    colorScheme: pref.colorScheme,
+    data: pref.data,
+    updatedAt: pref.updatedAt
+  });
 }
 
 export async function updateColorScheme(req: Request, res: Response) {

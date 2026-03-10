@@ -1,6 +1,6 @@
 ﻿// frontend/contexts/AuthContext.tsx - VERSÃƒO CORRIGIDA URGENTE
 import {
-  createContext, useContext, useEffect, useState, ReactNode,
+  createContext, useContext, useEffect, useRef, useState, ReactNode,
 } from 'react'
 import { useRouter } from 'next/router'
 import api from '@/lib/api'
@@ -18,6 +18,12 @@ interface User {
   email: string;
   companies: CompanyRole[];
   mustChangePassword?: boolean;
+}
+
+interface Preferences {
+  colorScheme?: string;
+  data?: any;
+  updatedAt?: string;
 }
 
 interface AuthContextData {
@@ -95,12 +101,16 @@ function removeSecureCookie(name: string) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const { changeTheme } = useTheme();
+  const { changeColorMode, colorMode } = useTheme();
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [companyId, setCompanyId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mustChangePassword, setMustChangePassword] = useState<boolean>(false);
+  const serverPrefUpdatedAtRef = useRef<number>(0);
+
+  const COLOR_MODE_KEY = 'valora_color_mode';
+  const COLOR_MODE_UPDATED_AT_KEY = 'valora_color_mode_updated_at';
 
   // Carregar estado inicial
   useEffect(() => {
@@ -126,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setToken(storedToken);
         setUser({ ...response.data.user, mustChangePassword: storedMustChange === 'true' });
-        // preferences removed
+        syncColorPreference(response.data.preferences || null);
 
         const storedCompanyId = localStorage.getItem('valora_company_id');
         const initialCompanyId = storedCompanyId
@@ -146,6 +156,74 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  function getLocalColorPreference(): { mode: 'dark' | 'light' | null; updatedAt: number } {
+    let mode = localStorage.getItem(COLOR_MODE_KEY);
+    if (!mode) {
+      const legacy = localStorage.getItem('color-mode');
+      if (legacy === 'dark' || legacy === 'light') {
+        localStorage.setItem(COLOR_MODE_KEY, legacy);
+        mode = legacy;
+      }
+    }
+    const updatedAtRaw = localStorage.getItem(COLOR_MODE_UPDATED_AT_KEY);
+    const updatedAt = updatedAtRaw ? Number(updatedAtRaw) : 0;
+    if (mode === 'dark' || mode === 'light') {
+      if (!updatedAtRaw || Number.isNaN(updatedAt)) {
+        const now = Date.now();
+        localStorage.setItem(COLOR_MODE_UPDATED_AT_KEY, String(now));
+        return { mode, updatedAt: now };
+      }
+      return { mode, updatedAt };
+    }
+    return { mode: null, updatedAt: 0 };
+  }
+
+  async function updateServerColorScheme(mode: 'dark' | 'light') {
+    try {
+      await api.put('/preferences/color-scheme', { colorScheme: mode });
+    } catch (err) {
+      console.error('Erro ao atualizar preferencia de tema:', err);
+    }
+  }
+
+  async function syncColorPreference(preferences: Preferences | null) {
+    if (typeof window === 'undefined') return;
+    const local = getLocalColorPreference();
+    const serverMode = preferences?.colorScheme === 'dark' || preferences?.colorScheme === 'light'
+      ? preferences.colorScheme
+      : null;
+    const serverUpdatedAt = preferences?.updatedAt ? new Date(preferences.updatedAt).getTime() : 0;
+
+    if (serverUpdatedAt) {
+      serverPrefUpdatedAtRef.current = serverUpdatedAt;
+    }
+
+    if (serverMode && !local.mode) {
+      changeColorMode(serverMode, serverUpdatedAt);
+      serverPrefUpdatedAtRef.current = serverUpdatedAt;
+      return;
+    }
+
+    if (serverMode && local.mode) {
+      if (serverUpdatedAt > local.updatedAt) {
+        changeColorMode(serverMode, serverUpdatedAt);
+        serverPrefUpdatedAtRef.current = serverUpdatedAt;
+        return;
+      }
+      if (local.updatedAt > serverUpdatedAt) {
+        await updateServerColorScheme(local.mode);
+        serverPrefUpdatedAtRef.current = local.updatedAt;
+        return;
+      }
+      return;
+    }
+
+    if (!serverMode && local.mode) {
+      await updateServerColorScheme(local.mode);
+      serverPrefUpdatedAtRef.current = local.updatedAt;
+    }
+  }
+
   async function login(email: string, password: string): Promise<User> {
     console.log('ðŸ” [AUTH] Starting login process...');
     console.log('ðŸ” [AUTH] Email:', email);
@@ -158,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       const { token: newToken, user: userData, refreshToken: newRefreshToken } = res.data;
+      const preferences: Preferences | null = res.data.preferences || null;
 
       // Armazenar tokens com prefixos especÃ­ficos da aplicaÃ§Ã£o
       localStorage.setItem('valora_token', newToken);
@@ -173,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setToken(newToken);
       setUser(userData);
-      // preferences removed
+      syncColorPreference(preferences);
       if (userData.companies && userData.companies.length > 0) {
         const firstCompany = userData.companies[0];
         setCompanyId(firstCompany.id);
@@ -274,6 +353,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCompanyId(id);
     localStorage.setItem('valora_company_id', String(id));
   }
+
+  useEffect(() => {
+    if (!user || !token) return;
+    const local = getLocalColorPreference();
+    if (!local.mode || !local.updatedAt) return;
+    if (local.updatedAt > serverPrefUpdatedAtRef.current) {
+      updateServerColorScheme(local.mode);
+      serverPrefUpdatedAtRef.current = local.updatedAt;
+    }
+  }, [colorMode, user, token]);
 
   // Auto-refresh com verificaÃ§Ã£o menos agressiva
   useEffect(() => {

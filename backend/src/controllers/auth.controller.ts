@@ -108,6 +108,10 @@ export async function login(req: Request, res: Response) {
       isDefault: uc.isDefault
     }));
 
+    const preference = await prisma.userPreference.findUnique({
+      where: { userId: user.id }
+    });
+
     // Gerar tokens
     const tokenPayload = {
       userId: user.id
@@ -136,7 +140,13 @@ export async function login(req: Request, res: Response) {
         mustChangePassword: user.mustChangePassword,
         companies
       },
-      preferences: null,
+      preferences: preference
+        ? {
+            colorScheme: preference.colorScheme,
+            data: preference.data,
+            updatedAt: preference.updatedAt
+          }
+        : null,
       message: 'Login realizado com sucesso'
     });
 
@@ -248,6 +258,10 @@ export async function getCurrentUser(req: Request, res: Response) {
       isDefault: uc.isDefault
     }));
 
+    const preference = await prisma.userPreference.findUnique({
+      where: { userId }
+    });
+
     return res.status(200).json({
       user: {
         id: user.id,
@@ -255,7 +269,13 @@ export async function getCurrentUser(req: Request, res: Response) {
         email: user.email,
         companies
       },
-      preferences: null
+      preferences: preference
+        ? {
+            colorScheme: preference.colorScheme,
+            data: preference.data,
+            updatedAt: preference.updatedAt
+          }
+        : null
     });
 
   } catch (error: unknown) {

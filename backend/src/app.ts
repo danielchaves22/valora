@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import companyRoutes from './routes/company.routes';
 import valuationRoutes from './routes/valuation.routes';
+import preferencesRoutes from './routes/preferences.routes';
 
 import { authMiddleware } from './middlewares/auth.middleware';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
@@ -168,6 +169,7 @@ app.use('/api', tenantMiddleware);
 app.use('/api/users', createRateLimitMiddleware('api'), userRoutes);
 app.use('/api/companies', createRateLimitMiddleware('api'), companyRoutes);
 app.use('/api/valuations', createRateLimitMiddleware('api'), valuationRoutes);
+app.use('/api/preferences', createRateLimitMiddleware('api'), preferencesRoutes);
 
 // 17) 404 handler
 app.use((req, res) => {

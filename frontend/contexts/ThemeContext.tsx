@@ -1,6 +1,5 @@
 // frontend/contexts/ThemeContext.tsx - VERSÃO COMPLETA
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api from '@/lib/api';
 
 // ✅ DEFINIÇÕES DE TEMA
 export interface Theme {
@@ -205,7 +204,7 @@ interface ThemeContextData {
   getThemeInfo: (themeKey: string) => Theme;
   changeTheme: (themeKey: string) => void;
   colorMode: 'dark' | 'light';
-  changeColorMode: (mode: 'dark' | 'light') => void;
+  changeColorMode: (mode: 'dark' | 'light', updatedAtMs?: number) => void;
 }
 
 // ✅ CRIAR CONTEXTO
@@ -214,7 +213,22 @@ const ThemeContext = createContext<ThemeContextData>({} as ThemeContextData);
 // ✅ PROVIDER DO CONTEXTO
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<string>('fixed');
-  const [colorMode, setColorMode] = useState<'dark' | 'light'>('light');
+  const COLOR_MODE_KEY = 'valora_color_mode';
+  const COLOR_MODE_UPDATED_AT_KEY = 'valora_color_mode_updated_at';
+
+  const readStoredColorMode = (): 'dark' | 'light' => {
+    if (typeof window === 'undefined') return 'light';
+    const stored = localStorage.getItem(COLOR_MODE_KEY) || localStorage.getItem('color-mode');
+    if (stored === 'dark' || stored === 'light') {
+      if (!localStorage.getItem(COLOR_MODE_KEY)) {
+        localStorage.setItem(COLOR_MODE_KEY, stored);
+      }
+      return stored;
+    }
+    return 'light';
+  };
+
+  const [colorMode, setColorMode] = useState<'dark' | 'light'>(readStoredColorMode);
 
   // ✅ APLICAR TEMA NAS CSS VARIABLES
   const applyTheme = (theme: Theme) => {
@@ -226,16 +240,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--color-primary-gradient', theme.colors.primaryGradient);
     root.style.setProperty('--color-primary-shadow', theme.colors.primaryShadow);
   };
-
-  // ✅ CARREGAR MODO DE COR SALVO
-  useEffect(() => {
-    try {
-      const savedMode = localStorage.getItem('color-mode') as 'dark' | 'light' | null;
-      if (savedMode === 'dark' || savedMode === 'light') {
-        setColorMode(savedMode);
-      }
-    } catch {}
-  }, []);
 
   // ✅ APLICAR TEMA QUANDO MUDAR
   useEffect(() => { /* fixed theme: no dynamic apply */ }, [currentTheme]);
@@ -250,7 +254,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.classList.remove('theme-dark');
     }
     root.style.colorScheme = colorMode;
-    try { localStorage.setItem('color-mode', colorMode); } catch {}
   }, [colorMode]);
 
   // ✅ FUNÇÃO PARA MUDAR TEMA
@@ -259,7 +262,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return;
   };
 
-  const changeColorMode = (mode: 'dark' | 'light') => { setColorMode(mode); };
+  const changeColorMode = (mode: 'dark' | 'light', updatedAtMs?: number) => {
+    setColorMode(mode);
+    if (typeof window !== 'undefined') {
+      const ts = typeof updatedAtMs === 'number' ? updatedAtMs : Date.now();
+      localStorage.setItem(COLOR_MODE_KEY, mode);
+      localStorage.setItem(COLOR_MODE_UPDATED_AT_KEY, String(ts));
+    }
+  };
 
   // ✅ AGRUPAR TEMAS POR CATEGORIA
   const themesByCategory = AVAILABLE_THEMES.reduce((acc, theme) => {

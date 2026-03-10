@@ -23,6 +23,7 @@ model User {
   mustChangePassword Boolean            @default(true)
   companies          UserCompany[]
   identities         UserIdentity[]
+  preference         UserPreference?
   valuationsCreated  ValuationProcess[] @relation("ValuationCreatedBy")
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
@@ -70,6 +71,16 @@ model UserCompany {
   company   Company @relation(fields: [companyId], references: [id])
 
   @@unique([userId, companyId])
+}
+
+model UserPreference {
+  userId      Int      @id
+  colorScheme String
+  data        Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model ValuationProcess {
