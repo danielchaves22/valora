@@ -159,10 +159,6 @@ export function Sidebar({ onToggle, isCollapsed }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="p-3 border-t border-soft text-xs text-muted">
-        <div className={`${collapsed ? 'hidden' : 'block'}`}>Acesso controlado por role</div>
-      </div>
-
       {activeMenu && (
         <div
           className="fixed bg-surface border border-soft rounded shadow-lg z-50 animate-fadeIn"

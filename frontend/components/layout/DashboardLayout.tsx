@@ -72,9 +72,9 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
         </div>
 
         {/* Centro: Troca de empresa */}
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm text-gray-300">Empresa de trabalho:</span>
-          {canSwitchCompany ? (
+        {canSwitchCompany && (
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-sm text-gray-300">Empresa de trabalho:</span>
             <button
               onClick={() => setCompanyModalOpen(true)}
               className="px-2 py-1 rounded border border-gray-700 bg-surface hover:bg-elevated text-white flex items-center gap-2"
@@ -84,13 +84,11 @@ export function DashboardLayout({ children, title = 'Dashboard' }: DashboardLayo
               <span>{companyName}</span>
               <Repeat size={14} className="text-gray-300" />
             </button>
-          ) : (
-            <span className="px-2 py-1 rounded border border-gray-700 bg-surface text-white">{companyName}</span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Direita: Usuário e menu */}
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 col-start-3">
           <div>
             <ThemeSelector showLabel={false} size="sm" />
           </div>
